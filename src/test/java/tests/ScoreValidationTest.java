@@ -13,60 +13,77 @@ import java.time.Duration;
 public class ScoreValidationTest extends BaseTest {
 
     @Test(dataProvider = "ScoreData", dataProviderClass = DataProviderUtility.class, priority = 1,groups = {"functional","smoke","regression"})
-    public void ScoreValidation(String TestCaseID, String name, String age, String pulse, String sysBP, String diaBP, String field, String score, String testStatus,String testType,String extraCol) {
-        reporter.info(TestCaseID + " Test Started for " + field);
+    public void ScoreValidation(String testcase, String name, String age, String pulse, String sysBP, String diaBP, String score) throws Exception {
         SoftAssert softAssert = new SoftAssert();
         resultPage = indexPage.submitHealthIndexForm(name, age, pulse, sysBP, diaBP);
-        if (field.equalsIgnoreCase("Age Score")) {
-            String actualScore = resultPage.getAgeScore();
-            softAssert.assertEquals(actualScore, score);
-            resultPage.clickResetBtn();
-        } else if (field.equalsIgnoreCase("BP Score")) {
-            String actualScore = resultPage.getBpScore();
-            softAssert.assertEquals(actualScore, score);
-            resultPage.clickResetBtn();
-        } else if (field.equalsIgnoreCase("Pulse Score")) {
-            String actualScore = resultPage.getPulseScore();
-            softAssert.assertEquals(actualScore, score);
-            resultPage.clickResetBtn();
-        } else if (field.equalsIgnoreCase("Alert")) {
-            String alertText = indexPage.acceptAlertAndGetText();
-            softAssert.assertTrue(alertText.contains("Provided BP values are not valid"));
+        reporter.info("Input form submitted");
+        try {
+            if (testcase.toLowerCase().contains("age score")) {
+                String actualScore = resultPage.getAgeScore();
+                softAssert.assertEquals(actualScore, score);
+                resultPage.clickResetBtn();
+                reporter.info("Reset Button Clicked");
+            } else if (testcase.toLowerCase().contains("bp score")) {
+                String actualScore = resultPage.getBpScore();
+                softAssert.assertEquals(actualScore, score);
+                resultPage.clickResetBtn();
+                reporter.info("Reset Button Clicked");
+            } else if (testcase.toLowerCase().contains("pulse score")) {
+                String actualScore = resultPage.getPulseScore();
+                softAssert.assertEquals(actualScore, score);
+                resultPage.clickResetBtn();
+                reporter.info("Reset Button Clicked");
+            } else if (testcase.toLowerCase().contains("alert")) {
+                String alertText = indexPage.acceptAlertAndGetText();
+                softAssert.assertTrue(alertText.contains("Provided BP values are not valid"));
 
+            }
+
+            softAssert.assertAll();
+            new DataProviderUtility().writeScoreData("Pass");
+        } catch(AssertionError e) {
+            new DataProviderUtility().writeScoreData("Fail");
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-
-        softAssert.assertAll();
 
     }
 
 
-    @Test(dataProvider = "OverallScoreData", dataProviderClass = DataProviderUtility.class, priority = 2,groups = {"functional","smoke","regression"})
-    public void OverallHealthScoreValidation(String testCase, String name, String age, String pulse, String sysBP, String diasBP, String expScore, String expRemark, String expColor,String exCol1,String exCol2) {
-        reporter.info(testCase + " Test Started");
+    @Test(dataProvider = "OverallScoreData", dataProviderClass = DataProviderUtility.class, priority = 2, groups = {"functional","smoke","regression"})
+    public void OverallHealthScoreValidation(String testCase, String name, String age, String pulse, String sysBP, String diasBP, String expScore, String expRemark, String expColor) throws Exception {
         SoftAssert softAssert = new SoftAssert();
 
         resultPage = indexPage.submitHealthIndexForm(name, age, pulse, sysBP, diasBP);
+        reporter.info("Input form submitted");
+        try {
+            if (isAlertPresent()) {
+                String alertText = indexPage.acceptAlertAndGetText();
+                reporter.info("Unexpected Alert found: " + alertText);
+                Assert.fail("Test Failed: Unexpected Alert [" + alertText + "] appeared for " + testCase);
+            } else {
+                String actualScore = resultPage.getOverAllScore();
+                softAssert.assertEquals(actualScore, expScore, "Overall Score mismatch in " + testCase);
 
-        if(isAlertPresent()){
-            String alertText = indexPage.acceptAlertAndGetText();
-            reporter.info("Unexpected Alert found: " + alertText);
-            Assert.fail("Test Failed: Unexpected Alert [" + alertText + "] appeared for " + testCase);
+                String actualRemark = resultPage.getRemark();
+                softAssert.assertEquals(actualRemark, expRemark, "Remark mismatch in " + testCase);
 
-        }else{
-            String actualScore = resultPage.getOverAllScore();
-            softAssert.assertEquals(actualScore, expScore, "Overall Score mismatch in " + testCase);
+                String actualColor = resultPage.getResultCardBackgroundColor();
+                softAssert.assertEquals(actualColor, expColor, "Color mismatch in " + testCase);
 
-            String actualRemark = resultPage.getRemark();
-            softAssert.assertEquals(actualRemark, expRemark, "Remark mismatch in " + testCase);
+                resultPage.clickResetBtn();
+                reporter.info("Reset Button Clicked");
+            }
 
-            String actualColor = resultPage.getResultCardBackgroundColor();
-            softAssert.assertEquals(actualColor, expColor, "Color mismatch in " + testCase);
-
-            resultPage.clickResetBtn();
+            softAssert.assertAll();
+            new DataProviderUtility().writeOverallScoreData("Pass");
+        } catch (AssertionError | Exception e) {
+            new DataProviderUtility().writeOverallScoreData("Fail");
+            throw e;
         }
-
-        softAssert.assertAll();
     }
+
 
     public boolean isAlertPresent() {
         try {

@@ -1,9 +1,7 @@
 package base;
 
-import org.apache.commons.io.FileUtils;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -12,30 +10,23 @@ import org.openqa.selenium.edge.EdgeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
-import org.testng.ITestResult;
 import org.testng.annotations.*;
 import pages.base.BasePage;
 import pages.pageobjects.IndexPage;
 import pages.pageobjects.ResultPage;
 import utilities.ExtentReportUtility;
-import utilities.LoggerUtility;
 import utilities.Reporter;
 
-import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.time.Duration;
-import java.util.Date;
 import java.util.Properties;
 
 public class BaseTest {
     public  WebDriver driver;
     public  static Properties prop;
-    public Logger log = LoggerUtility.getLogger(BaseTest.class);
+    public Logger log = LogManager.getLogger(this.getClass());
     public BasePage basePage;
     public IndexPage indexPage;
     public ResultPage resultPage;
@@ -58,7 +49,6 @@ public class BaseTest {
     @BeforeSuite(alwaysRun = true)
     public void beforeSuite(){
         loadconfig();
-        ExtentReportUtility.getInstance();
         log.info("Test Suite Started");
     }
 
@@ -101,51 +91,15 @@ public class BaseTest {
         log.info("Navigated to: "+getProperty("url"));
         basePage = new BasePage(driver);
         indexPage = new IndexPage(driver);
+        ExtentReportUtility.driver=driver;
     }
-    @BeforeMethod(alwaysRun = true)
-    public void startTest(Method method){
-        ExtentReportUtility.createTest(method.getName());
-    }
-    @AfterMethod(alwaysRun = true)
-    public void endTest(ITestResult result){
-        if(result.getStatus()==ITestResult.FAILURE){
-            String screenShotPath = takeScreenshot(result.getName());
-            ExtentReportUtility.addScreenshot(screenShotPath);
-            reporter.fail("Test Failed: "+result.getName());
-        }else if(result.getStatus()==ITestResult.SUCCESS) {
-            reporter.info("Test Passed: "+result.getName());
-        }else if(result.getStatus()==ITestResult.SKIP){
-            reporter.skip("Test Skipped: "+result.getName());
-        }
-    }
+
     @AfterClass(alwaysRun = true)
     public void closeBrowser(){
         if(driver!=null){
             driver.quit();
             reporter.info("Browser closed");
-        }
-    }
-
-    @AfterSuite(alwaysRun = true)
-    public void tearDown(){
-        ExtentReportUtility.flushReport();
-    }
-
-    public String takeScreenshot(String testName) {
-        File src = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
-
-        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String path = System.getProperty("user.dir")
-                + File.separator + getProperty("screenshotPath")
-                + testName + "_" + timestamp + ".png";
-        System.out.println(path);
-        try {
-            FileUtils.copyFile(src, new File(path));
-            reporter.info("Screenshot captured for test: " + testName);
-        } catch (IOException e) {
-            reporter.fail("Failed to save screenshot"+ e.getMessage());
-        }
-        return "screenshots/" + testName + "_" + timestamp + ".png";
+       }
     }
 
 

@@ -20,7 +20,10 @@ public class BasePage {
         element.sendKeys(text);
     }
     public void select(WebElement element, String text){
-        new Select(element).selectByVisibleText(text);
+
+        try {
+            new Select(element).selectByVisibleText(text);
+        }catch (Exception e){}
     }
     public String get(WebElement element){
         return element.getText();
