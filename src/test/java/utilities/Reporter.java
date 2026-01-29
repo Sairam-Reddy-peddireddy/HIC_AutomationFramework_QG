@@ -31,15 +31,4 @@ public class Reporter {
         ExtentReportUtility.getTest().log(Status.SKIP, message);
     }
 
-    // Manual screenshot logging
-    public void screenshot(String testName) {
-        String path = ExtentReportUtility.takeScreenshot(testName);
-        try {
-            ExtentReportUtility.getTest().addScreenCaptureFromPath(path);
-            log.info("Screenshot attached: " + path);
-        } catch (Exception e) {
-            log.error("Screenshot attach failed: " + e.getMessage());
-            ExtentReportUtility.getTest().log(Status.WARNING, "Screenshot attach failed: " + e.getMessage());
-        }
-    }
 }

@@ -17,6 +17,7 @@ import pages.pageobjects.ResultPage;
 import utilities.ExtentReportUtility;
 import utilities.Reporter;
 
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -33,7 +34,7 @@ public class BaseTest {
     protected Reporter reporter = new Reporter(this.getClass());
 
     public void loadconfig() {
-        try (InputStream input = getClass().getClassLoader().getResourceAsStream("config.properties"))
+        try (FileInputStream input = new FileInputStream("src/test/resources/config.properties"))
         {   prop = new Properties();
             prop.load(input);
             log.info("Config file loaded successfully");
